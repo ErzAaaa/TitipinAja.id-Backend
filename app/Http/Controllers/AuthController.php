@@ -30,4 +30,6 @@ class AuthController extends Controller
             'data' => $pengguna
         ]);
     }
+
+    
 }
