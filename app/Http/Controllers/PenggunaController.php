@@ -9,7 +9,7 @@ use Illuminate\Support\Facades\Validator;
 
 class PenggunaController extends Controller
 {
-    // GET - Tampilkan semua pengguna
+    // GET - Tampilkan semua pengguna (Fungsi READ)
     public function index()
     {
         $pengguna = Pengguna::all();
@@ -19,7 +19,9 @@ class PenggunaController extends Controller
         ], 200);
     }
 
-    // POST - Tambah pengguna baru
+    // POST - Tambah pengguna baru (Fungsi CREATE)
+    // Catatan: Ini tumpang tindih dengan register() di AuthController Anda.
+    // Anda mungkin hanya perlu salah satu.
     public function store(Request $request)
     {
         $validator = Validator::make($request->all(), [
@@ -52,7 +54,7 @@ class PenggunaController extends Controller
         ], 201);
     }
 
-    // GET - Tampilkan detail pengguna
+    // GET - Tampilkan detail pengguna (Fungsi READ by ID)
     public function show($id)
     {
         $pengguna = Pengguna::find($id);
@@ -70,7 +72,7 @@ class PenggunaController extends Controller
         ], 200);
     }
 
-    // PUT/PATCH - Update pengguna
+    // PUT/PATCH - Update pengguna (Fungsi UPDATE)
     public function update(Request $request, $id)
     {
         $pengguna = Pengguna::find($id);
@@ -86,6 +88,7 @@ class PenggunaController extends Controller
             'nama_lengkap' => 'sometimes|string|max:100',
             'no_telepon' => 'sometimes|string|max:20',
             'alamat' => 'sometimes|string|max:100',
+            // Gunakan primary key kustom Anda 'id_pengguna'
             'email' => 'sometimes|email|max:100|unique:pengguna,email,' . $id . ',id_pengguna',
             'password' => 'sometimes|string|min:6',
         ]);
@@ -111,7 +114,7 @@ class PenggunaController extends Controller
         ], 200);
     }
 
-    // DELETE - Hapus pengguna
+    // DELETE - Hapus pengguna (Fungsi DELETE)
     public function destroy($id)
     {
         $pengguna = Pengguna::find($id);

@@ -4,10 +4,11 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Laravel\Sanctum\HasApiTokens; // <--- 1. TAMBAHKAN IMPORT INI
 
 class Pengguna extends Model
 {
-    use HasFactory;
+    use HasFactory, HasApiTokens; // <--- 2. TAMBAHKAN TRAIT INI
 
     protected $table = 'pengguna';
     protected $primaryKey = 'id_pengguna';
@@ -42,3 +43,4 @@ class Pengguna extends Model
         return $this->hasMany(Riwayat::class, 'id_pengguna', 'id_pengguna');
     }
 }
+
