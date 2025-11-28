@@ -1,1 +1,5 @@
+<<<<<<< HEAD
 web: php artisan serve --host 0.0.0.0 --port $PORT
+=======
+web: php artisan serve --host 0.0.0.0 --port $PORT
+>>>>>>> 18903b1cff61849fa3083b4d3795d1b7b2abba49
