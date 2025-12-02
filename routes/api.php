@@ -2,10 +2,15 @@
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
+
+// --- IMPORT SEMUA CONTROLLER ANDA DI SINI ---
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\PenggunaController;
 use App\Http\Controllers\PetugasController;
-use App\Http\Controllers\RiwayatController; // <-- TAMBAHKAN IMPORT INI
+use App\Http\Controllers\RiwayatController;
+use App\Http\Controllers\MotorController;     // <--- WAJIB: Untuk data motor
+use App\Http\Controllers\TransaksiController; // <--- WAJIB: Untuk transaksi parkir
+use App\Http\Controllers\TarifController;     // <--- WAJIB: Untuk setting harga
 
 /*
 |--------------------------------------------------------------------------
@@ -13,32 +18,38 @@ use App\Http\Controllers\RiwayatController; // <-- TAMBAHKAN IMPORT INI
 |--------------------------------------------------------------------------
 */
 
-// Rute Publik (Auth)
+// ==========================================
+// 1. RUTE PUBLIK (Bisa diakses tanpa login)
+// ==========================================
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
 
-// Rute Terproteksi (CRUD Pengguna, Petugas, dan Aktivitas)
+
+// ==========================================
+// 2. RUTE PRIVATE (Harus Login & Punya Token)
+// ==========================================
 Route::middleware('auth:sanctum')->group(function () {
-    
-    // Rute Logout
-    Route::post('/logout', [AuthController::class, 'logout']); // <-- Saya tambahkan rute logout
 
-    // Pengguna
-    Route::get('/pengguna', [PenggunaController::class, 'index']);
-    Route::get('/pengguna/{id}', [PenggunaController::class, 'show']);
-    Route::put('/pengguna/{id}', [PenggunaController::class, 'update']);
-    Route::delete('/pengguna/{id}', [PenggunaController::class, 'destroy']);
-    
-    // Petugas
-    Route::get('/petugas', [PetugasController::class, 'index']);
-    Route::get('/petugas/{id}', [PetugasController::class, 'show']);
-    Route::post('/petugas', [PetugasController::class, 'store']); // Tambahkan rute store
-    Route::put('/petugas/{id}', [PetugasController::class, 'update']);
-    Route::delete('/petugas/{id}', [PetugasController::class, 'destroy']);
+    // --- AUTH & PROFILE ---
+    Route::post('/logout', [AuthController::class, 'logout']); 
+    // Route profile ini penting agar Flutter tahu siapa yang sedang login
+    Route::get('/profile', [PenggunaController::class, 'profile']); 
 
-    // --- INI PERBAIKANNYA ---
-    // Rute untuk "Aktivitas Terbaru" di dashboard Anda
-    // Pastikan Anda memiliki RiwayatController
+
+    // --- DATA PENGGUNA & PETUGAS (User Management) ---
+    // 'apiResource' otomatis membuat route: index, store, show, update, destroy
+    Route::apiResource('pengguna', PenggunaController::class);
+    Route::apiResource('petugas', PetugasController::class);
+
+
+    // --- DATA INTI APLIKASI (Motor & Tarif) ---
+    Route::apiResource('motor', MotorController::class); 
+    Route::apiResource('tarif', TarifController::class);
+
+
+    // --- TRANSAKSI & RIWAYAT ---
+    Route::apiResource('transaksi', TransaksiController::class);
+    
+    // Rute Custom untuk Riwayat/Aktivitas
     Route::get('/aktivitas', [RiwayatController::class, 'index']);
 });
-

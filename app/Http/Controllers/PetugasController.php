@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\Validator;
 
 class PetugasController extends Controller
 {
+    // GET - Tampilkan semua petugas
     public function index()
     {
         $petugas = Petugas::all();
@@ -18,15 +19,17 @@ class PetugasController extends Controller
         ], 200);
     }
 
+    // POST - Tambah petugas baru
     public function store(Request $request)
     {
+        // 1. Validasi Input (Fokus ke Email)
         $validator = Validator::make($request->all(), [
             'nama_petugas' => 'required|string|max:100',
-            'username' => 'required|string|max:50|unique:petugas,username',
-            'password' => 'required|string|min:6',
-            'no_telepon' => 'required|string|max:20',
-            'shift_kerja' => 'required|string|max:20',
-            'status' => 'required|string|max:20',
+            'email'        => 'required|email|max:100|unique:petugas,email', // KUNCI LOGIN ADMIN
+            'password'     => 'required|string|min:6',
+            'no_telepon'   => 'required|string|max:20',
+            'shift_kerja'  => 'required|string|max:20',
+            'status'       => 'required|string|max:20',
         ]);
 
         if ($validator->fails()) {
@@ -36,13 +39,21 @@ class PetugasController extends Controller
             ], 422);
         }
 
+        // 2. Simpan ke Database
         $petugas = Petugas::create([
             'nama_petugas' => $request->nama_petugas,
-            'username' => $request->username,
-            'password' => Hash::make($request->password),
-            'no_telepon' => $request->no_telepon,
-            'shift_kerja' => $request->shift_kerja,
-            'status' => $request->status,
+            'email'        => $request->email,
+            
+            // TRICK DEADLINE: 
+            // Jika database Anda masih maksa minta kolom 'username', 
+            // kita isi otomatis pakai email biar tidak error.
+            // Jika kolom username sudah dihapus di DB, baris ini boleh dihapus.
+            'username'     => $request->email, 
+            
+            'password'     => Hash::make($request->password),
+            'no_telepon'   => $request->no_telepon,
+            'shift_kerja'  => $request->shift_kerja,
+            'status'       => $request->status,
         ]);
 
         return response()->json([
@@ -52,53 +63,47 @@ class PetugasController extends Controller
         ], 201);
     }
 
+    // GET - Detail petugas
     public function show($id)
     {
         $petugas = Petugas::find($id);
-
         if (!$petugas) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Petugas tidak ditemukan'
-            ], 404);
+            return response()->json(['success' => false, 'message' => 'Petugas tidak ditemukan'], 404);
         }
-
-        return response()->json([
-            'success' => true,
-            'data' => $petugas
-        ], 200);
+        return response()->json(['success' => true, 'data' => $petugas], 200);
     }
 
+    // PUT - Update petugas
     public function update(Request $request, $id)
     {
         $petugas = Petugas::find($id);
-
         if (!$petugas) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Petugas tidak ditemukan'
-            ], 404);
+            return response()->json(['success' => false, 'message' => 'Petugas tidak ditemukan'], 404);
         }
+
+        $pk = $petugas->getKeyName(); // Ambil nama primary key (misal: id_petugas)
 
         $validator = Validator::make($request->all(), [
             'nama_petugas' => 'sometimes|string|max:100',
-            'username' => 'sometimes|string|max:50|unique:petugas,username,' . $id . ',id_petugas',
-            'password' => 'sometimes|string|min:6',
-            'no_telepon' => 'sometimes|string|max:20',
-            'shift_kerja' => 'sometimes|string|max:20',
-            'status' => 'sometimes|string|max:20',
+            'email'        => 'sometimes|email|max:100|unique:petugas,email,' . $id . ',' . $pk,
+            'password'     => 'sometimes|string|min:6',
+            'no_telepon'   => 'sometimes|string|max:20',
         ]);
 
         if ($validator->fails()) {
-            return response()->json([
-                'success' => false,
-                'errors' => $validator->errors()
-            ], 422);
+            return response()->json(['success' => false, 'errors' => $validator->errors()], 422);
         }
 
         $data = $request->except('password');
-        if ($request->has('password')) {
+        
+        // Hash password baru jika ada
+        if ($request->has('password') && $request->password != null) {
             $data['password'] = Hash::make($request->password);
+        }
+
+        // Update username juga kalau email berubah (Jaga-jaga DB masih butuh username)
+        if ($request->has('email')) {
+            $data['username'] = $request->email;
         }
 
         $petugas->update($data);
@@ -110,22 +115,14 @@ class PetugasController extends Controller
         ], 200);
     }
 
+    // DELETE - Hapus petugas
     public function destroy($id)
     {
         $petugas = Petugas::find($id);
-
         if (!$petugas) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Petugas tidak ditemukan'
-            ], 404);
+            return response()->json(['success' => false, 'message' => 'Petugas tidak ditemukan'], 404);
         }
-
         $petugas->delete();
-
-        return response()->json([
-            'success' => true,
-            'message' => 'Petugas berhasil dihapus'
-        ], 200);
+        return response()->json(['success' => true, 'message' => 'Petugas berhasil dihapus'], 200);
     }
 }

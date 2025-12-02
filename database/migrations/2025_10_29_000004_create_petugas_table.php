@@ -9,13 +9,23 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('petugas', function (Blueprint $table) {
-            $table->id('id_petugas');
-            $table->string('nama_petugas', 100);
-            $table->string('username', 50)->unique();
-            $table->string('password', 100);
-            $table->string('no_telepon', 20);
-            $table->string('shift_kerja', 20);
-            $table->string('status', 20);
+            // Pastikan primary key sesuai model (id_petugas)
+            $table->id('id_petugas'); 
+            
+            $table->string('nama_petugas');
+            
+            // --- TAMBAHKAN INI ---
+            $table->string('email')->unique(); 
+            // ---------------------
+            
+            // Kolom username biarkan saja (atau buat nullable) agar tidak error
+            // karena controller kita tadi mengisi username otomatis pake email
+            $table->string('username')->nullable(); 
+            
+            $table->string('password');
+            $table->string('no_telepon');
+            $table->string('shift_kerja');
+            $table->string('status');
             $table->timestamps();
         });
     }
