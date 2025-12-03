@@ -12,33 +12,20 @@ class KartuTitipSeeder extends Seeder
     {
         DB::table('kartu_titip')->insert([
             [
-                'id_transaksi' => 1,
-                'nomor_kartu' => 'KT001',
-                'status' => 'dikembalikan',
-                'created_at' => Carbon::now()->subDays(2),
-                'updated_at' => Carbon::now()->subDays(2),
+                'id_transaksi' => 1, // Pastikan ID ini ada di TransaksiSeeder
+                'nomor_kartu'  => 'KT001',
+                'status'       => 'dikembalikan',
+                'created_at'   => Carbon::now()->subDays(2),
+                'updated_at'   => Carbon::now()->subDays(2),
             ],
             [
-                'id_transaksi' => 2,
-                'nomor_kartu' => 'KT002',
-                'status' => 'dikembalikan',
-                'created_at' => Carbon::now()->subDays(1),
-                'updated_at' => Carbon::now()->subDays(1),
+                'id_transaksi' => 2, // Pastikan ID ini ada di TransaksiSeeder
+                'nomor_kartu'  => 'KT002',
+                'status'       => 'digunakan', // Ubah status agar sesuai logika (Masuk = Digunakan)
+                'created_at'   => Carbon::now()->subDays(1),
+                'updated_at'   => Carbon::now()->subDays(1),
             ],
-            [
-                'id_transaksi' => 3,
-                'nomor_kartu' => 'KT003',
-                'status' => 'digunakan',
-                'created_at' => Carbon::now(),
-                'updated_at' => Carbon::now(),
-            ],
-            [
-                'id_transaksi' => 4,
-                'nomor_kartu' => 'KT004',
-                'status' => 'digunakan',
-                'created_at' => Carbon::now(),
-                'updated_at' => Carbon::now(),
-            ],
+            // Data ke-3 dan ke-4 DIHAPUS dulu karena Transaksi ID 3 & 4 belum dibuat
         ]);
     }
 }

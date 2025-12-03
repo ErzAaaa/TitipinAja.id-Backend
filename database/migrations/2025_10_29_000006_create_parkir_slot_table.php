@@ -8,17 +8,20 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::create('parkir_slot', function (Blueprint $table) {
-            $table->id('id_slot');
-            $table->string('kode_slot', 20)->unique();
+        // PERBAIKAN: Gunakan 'parkir_slots' (Jamak/Plural)
+        // Agar sesuai dengan standar Laravel dan referensi di tabel transaksi
+        Schema::create('parkir_slots', function (Blueprint $table) {
+            
+            $table->id('id_parkir_slot'); 
+            $table->string('nomor_slot', 20)->unique(); 
             $table->string('lokasi', 50);
-            $table->string('status', 20);
+            $table->enum('status', ['Tersedia', 'Terisi'])->default('Tersedia');
             $table->timestamps();
         });
     }
 
     public function down(): void
     {
-        Schema::dropIfExists('parkir_slot');
+        Schema::dropIfExists('parkir_slots');
     }
 };

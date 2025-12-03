@@ -9,7 +9,7 @@ class ParkirSlot extends Model
 {
     use HasFactory;
 
-    protected $table = 'parkir_slot';
+    protected $table = 'parkir_slots';
     protected $primaryKey = 'id_slot';
 
     protected $fillable = [

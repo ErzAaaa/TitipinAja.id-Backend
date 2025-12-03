@@ -13,71 +13,64 @@ class Transaksi extends Model
     protected $primaryKey = 'id_transaksi';
 
     protected $fillable = [
-        'id_motor',
-        'id_petugas',
-        'id_tarif',
-        'id_slot',
-        'jam_masuk',
-        'jam_keluar',
-        'status',
+        'id_pengguna', 
+        'id_motor', 
+        'id_petugas', 
+        'id_parkir_slot', // SUDAH BENAR (Sesuai Migration)
+        'jam_masuk', 
+        'jam_keluar', 
+        'total_biaya', 
+        'status'
+        // 'id_tarif' DIHAPUS karena kita hitung manual di controller
     ];
 
     protected $casts = [
-        'jam_masuk' => 'datetime:H:i:s',
-        'jam_keluar' => 'datetime:H:i:s',
+        'jam_masuk' => 'datetime', // Biarkan datetime agar mudah dihitung Carbon
+        'jam_keluar' => 'datetime',
     ];
 
-    // Relasi Many-to-One dengan Motor
+    // ==========================
+    // RELATIONS
+    // ==========================
+
     public function motor()
     {
         return $this->belongsTo(Motor::class, 'id_motor', 'id_motor');
     }
 
-    // Relasi Many-to-One dengan Petugas
     public function petugas()
     {
         return $this->belongsTo(Petugas::class, 'id_petugas', 'id_petugas');
     }
 
-    // Relasi Many-to-One dengan Tarif
-    public function tarif()
+    // Tambahan: Relasi ke User (Pengguna)
+    public function pengguna()
     {
-        return $this->belongsTo(Tarif::class, 'id_tarif', 'id_tarif');
+        // Sesuaikan 'User::class' dengan nama model user Anda (misal: Pengguna::class)
+        return $this->belongsTo(User::class, 'id_pengguna', 'id'); 
     }
 
-    // Relasi Many-to-One dengan ParkirSlot
+    // PERBAIKAN PENTING: Nama kolom foreign key & owner key
     public function parkirSlot()
     {
-        return $this->belongsTo(ParkirSlot::class, 'id_slot', 'id_slot');
+        // Parameter 2: Foreign Key di tabel transaksi (id_parkir_slot)
+        // Parameter 3: Owner Key di tabel parkir_slots (id_parkir_slot)
+        return $this->belongsTo(ParkirSlot::class, 'id_parkir_slot', 'id_parkir_slot');
     }
 
-    // Relasi One-to-One dengan Pembayaran
-    public function pembayaran()
-    {
-        return $this->hasOne(Pembayaran::class, 'id_transaksi', 'id_transaksi');
-    }
+    // ==========================
+    // SCOPES (Untuk Filter Mudah)
+    // ==========================
 
-    // Relasi One-to-One dengan KartuTitip
-    public function kartuTitip()
-    {
-        return $this->hasOne(KartuTitip::class, 'id_transaksi', 'id_transaksi');
-    }
-
-    // Relasi One-to-Many dengan Riwayat
-    public function riwayats()
-    {
-        return $this->hasMany(Riwayat::class, 'id_transaksi', 'id_transaksi');
-    }
-
-    // Scope untuk transaksi aktif
+    // Scope untuk transaksi aktif (status = 'Masuk')
     public function scopeAktif($query)
     {
-        return $query->where('status', 'aktif');
+        return $query->where('status', 'Masuk');
     }
 
-    // Scope untuk transaksi selesai
+    // Scope untuk transaksi selesai (status = 'Selesai')
     public function scopeSelesai($query)
     {
-        return $query->where('status', 'selesai');
+        return $query->where('status', 'Selesai');
     }
 }

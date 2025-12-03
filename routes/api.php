@@ -52,4 +52,14 @@ Route::middleware('auth:sanctum')->group(function () {
     
     // Rute Custom untuk Riwayat/Aktivitas
     Route::get('/aktivitas', [RiwayatController::class, 'index']);
+
+    Route::post('/parkir/checkin', [TransaksiController::class, 'checkIn']);
+    
+    // 2. Cek Status Aktif (Untuk Dashboard)
+    Route::get('/parkir/aktivitas', [TransaksiController::class, 'getActiveTransaction']);
+    
+    // 3. Selesai Parkir (Hitung Biaya & Keluar)
+    Route::post('/parkir/checkout', [TransaksiController::class, 'checkOut']);
+
+    
 });
