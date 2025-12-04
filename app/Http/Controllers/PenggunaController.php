@@ -26,7 +26,7 @@ class PenggunaController extends Controller
     {
         $validator = Validator::make($request->all(), [
             'nama_lengkap' => 'required|string|max:100',
-            'no_telepon' => 'required|string|max:20',
+            'no_telepon' => 'required|int|max:14',
             'alamat' => 'required|string|max:100',
             'email' => 'required|email|max:100|unique:pengguna,email',
             'password' => 'required|string|min:6',
@@ -86,7 +86,7 @@ class PenggunaController extends Controller
 
         $validator = Validator::make($request->all(), [
             'nama_lengkap' => 'sometimes|string|max:100',
-            'no_telepon' => 'sometimes|string|max:20',
+            'no_telepon' => 'sometimes|int|max:14',
             'alamat' => 'sometimes|string|max:100',
             // Gunakan primary key kustom Anda 'id_pengguna'
             'email' => 'sometimes|email|max:100|unique:pengguna,email,' . $id . ',id_pengguna',
