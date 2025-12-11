@@ -12,7 +12,7 @@ return new class extends Migration
         // Agar sesuai dengan standar Laravel dan referensi di tabel transaksi
         Schema::create('parkir_slots', function (Blueprint $table) {
             
-            $table->id('id_parkir_slot'); 
+            $table->id('id_slot'); 
             $table->string('nomor_slot', 20)->unique(); 
             $table->string('lokasi', 50);
             $table->enum('status', ['Tersedia', 'Terisi'])->default('Tersedia');

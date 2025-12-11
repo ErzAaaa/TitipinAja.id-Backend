@@ -15,7 +15,7 @@ class TransaksiSeeder extends Seeder
                 'id_pengguna'    => 1, 
                 'id_motor'       => 1, 
                 'id_petugas'     => 1, 
-                'id_parkir_slot' => 1, 
+                'id_slot' => 1, 
                 
                 // TAMBAHKAN DUA BARIS INI:
                 'kode_tiket'     => 'TICKET-001', // Beri nilai unik (sesuai constraint di DB)
@@ -32,7 +32,7 @@ class TransaksiSeeder extends Seeder
                 'id_pengguna'    => 2,
                 'id_motor'       => 2, 
                 'id_petugas'     => 1,
-                'id_parkir_slot' => 2,
+                'id_slot' => 2,
                 
                 // TAMBAHKAN DUA BARIS INI:
                 'kode_tiket'     => 'TICKET-002', // Beri nilai unik

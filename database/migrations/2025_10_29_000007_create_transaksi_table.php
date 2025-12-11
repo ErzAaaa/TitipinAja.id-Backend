@@ -31,8 +31,8 @@ return new class extends Migration
         $table->foreign('id_petugas')->references('id_petugas')->on('petugas')->onDelete('set null');
 
         // 4. Relasi ke Slot Parkir
-        $table->unsignedBigInteger('id_parkir_slot')->nullable();
-        $table->foreign('id_parkir_slot')->references('id_parkir_slot')->on('parkir_slots')->onDelete('set null');
+        $table->unsignedBigInteger('id_slot')->nullable();
+        $table->foreign('id_slot')->references('id_slot')->on('parkir_slots')->onDelete('set null');
 
         $table->dateTime('jam_masuk');
         $table->dateTime('jam_keluar')->nullable();
