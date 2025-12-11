@@ -9,8 +9,13 @@ return new class extends Migration
     public function up()
 {
     Schema::table('transaksi', function (Blueprint $table) {
-        $table->string('kode_tiket')->unique()->after('id_transaksi'); // Kode unik untuk QR
-        $table->string('metode_pembayaran')->nullable()->after('total_biaya'); // Cash / QRIS
+        // Cek dulu: Jika kolom 'kode_tiket' BELUM ada, baru buat.
+        if (!Schema::hasColumn('transaksi', 'kode_tiket')) {
+            $table->string('kode_tiket')->nullable()->after('id_transaksi'); 
+            // Sesuaikan atribut lain (unique/nullable) dengan kodingan asli Anda
+        }
+        
+        // Lakukan hal yang sama untuk kolom lain jika ada di file ini
     });
 }
 };
