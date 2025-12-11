@@ -9,11 +9,12 @@ use Illuminate\Support\Facades\Validator;
 
 class AuthController extends Controller
 {
-    // Login khusus Petugas / Admin
+    // Login khusus Petugas / Admin (Via Email)
     public function login(Request $request)
     {
+        // 1. Validasi Input (Ganti username -> email)
         $validator = Validator::make($request->all(), [
-            'username' => 'required|string',
+            'email'    => 'required|email', // Wajib format email valid
             'password' => 'required|string',
         ]);
 
@@ -21,22 +22,23 @@ class AuthController extends Controller
             return response()->json(['error' => $validator->errors()], 422);
         }
 
-        // Cari Petugas
-        $petugas = Petugas::where('username', $request->username)->first();
+        // 2. Cari Petugas Berdasarkan Email
+        $petugas = Petugas::where('email', $request->email)->first();
 
-        // Cek Password
+        // 3. Cek Password
         if (!$petugas || !Hash::check($request->password, $petugas->password)) {
-            return response()->json(['message' => 'Username atau Password salah'], 401);
+            return response()->json(['message' => 'Email atau Password salah'], 401);
         }
 
-        // Buat Token
+        // 4. Buat Token (Sanctum)
         $token = $petugas->createToken('auth_token_petugas')->plainTextToken;
 
         return response()->json([
-            'message' => 'Login Berhasil',
+            'success'      => true, // Tambahkan flag success agar mudah dicek di Flutter
+            'message'      => 'Login Berhasil',
             'access_token' => $token,
-            'token_type' => 'Bearer',
-            'data' => $petugas
+            'token_type'   => 'Bearer',
+            'data'         => $petugas
         ]);
     }
 
