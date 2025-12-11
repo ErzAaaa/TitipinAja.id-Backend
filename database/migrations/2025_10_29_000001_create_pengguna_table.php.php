@@ -10,16 +10,9 @@ return new class extends Migration
     {
         Schema::create('pengguna', function (Blueprint $table) {
             $table->id('id_pengguna');
-            $table->string('nama_lengkap', 100);
-            
-            // UBAH BARIS INI:
-            // Dari: $table->int('no_telepon', 14);
-            // Menjadi string agar 0 di depan tidak hilang
-            $table->string('no_telepon', 20); 
-            
-            $table->string('alamat', 100);
-            $table->string('email', 100)->unique();
-            $table->string('password', 100);
+            $table->string('nama', 100);       // Mengganti nama_lengkap -> nama
+            $table->string('alamat', 200)->nullable(); // Alamat opsional
+            $table->string('no_telepon', 20);  // String agar angka 0 di depan tidak hilang
             $table->timestamps();
         });
     }

@@ -25,72 +25,82 @@ class TransaksiController extends Controller
     }
 
     // [FLOW 1] Check-In: Petugas input data, Sistem cari slot & generate tiket
+    // ... import dan kode sebelumnya tetap sama ...
+
     public function store(Request $request)
     {
-        // Validasi input petugas
+        // 1. Validasi Input Petugas
         $request->validate([
-            'plat_nomor'   => 'required|string|uppercase',
-            'merk_motor'   => 'required|string',
-            'nama_pemilik' => 'required|string', // Hanya nama, tidak perlu password/email user
+            // Data Pengguna
+            'nama'        => 'required|string|max:100',
+            'alamat'      => 'required|string|max:200',
+            'no_telepon'  => 'required|string|max:20', // Kunci unik identitas user
+            
+            // Data Motor
+            'plat_nomor'  => 'required|string|uppercase',
+            'merk_motor'  => 'required|string',
         ]);
 
         DB::beginTransaction();
         try {
-            // 1. Cari Slot Kosong
+            // 2. Cek Slot Parkir
             $slot = ParkirSlot::where('status', 'Tersedia')->first();
             if (!$slot) {
                 return response()->json(['success' => false, 'message' => 'Parkiran Penuh!'], 400);
             }
 
-            // 2. Simpan/Cari Data Pengguna (Data Pasif)
-            // Kita pakai firstOrCreate agar kalau orangnya sama tidak double data
+            // 3. LOGIKA PENGGUNA (Cari atau Buat Baru)
+            // Kita gunakan nomor telepon sebagai patokan unik
             $pengguna = Pengguna::firstOrCreate(
-                ['nama_lengkap' => $request->nama_pemilik],
+                ['no_telepon' => $request->no_telepon], // Cari berdasarkan HP
                 [
-                    'no_telepon' => 0, // Dummy
-                    'alamat' => '-',   // Dummy
-                    'email' => Str::random(10).'@titipinaja.com', // Dummy agar unique key tidak error
-                    'password' => bcrypt('guest'), // Dummy
+                    'nama' => $request->nama,           // Jika baru, isi nama
+                    'alamat' => $request->alamat        // Jika baru, isi alamat
                 ]
             );
 
-            // 3. Simpan Data Motor
-            $motor = Motor::create([
-                'id_pengguna' => $pengguna->id_pengguna,
-                'plat_nomor'  => $request->plat_nomor,
-                'merk'        => $request->merk_motor,
-                'warna'       => $request->warna ?? '-',
-                'tahun'       => date('Y')
-            ]);
+            // Jika pengguna lama tapi namanya beda/update (Opsional: update data lama)
+            // $pengguna->update(['nama' => $request->nama, 'alamat' => $request->alamat]);
 
-            // 4. Generate Kode Tiket Unik (Untuk QR Code)
+            // 4. LOGIKA MOTOR (Cari atau Buat Baru)
+            $motor = Motor::firstOrCreate(
+                ['plat_nomor' => $request->plat_nomor],
+                [
+                    'id_pengguna' => $pengguna->id_pengguna,
+                    'merk'        => $request->merk_motor,
+                    'warna'       => $request->warna ?? '-',
+                    'tahun'       => date('Y')
+                ]
+            );
+
+            // 5. Generate Kode Tiket
             $kodeTiket = 'TRX-' . strtoupper(Str::random(6));
 
-            // 5. Buat Transaksi
+            // 6. Simpan Transaksi
             $transaksi = Transaksi::create([
                 'id_pengguna'    => $pengguna->id_pengguna,
                 'id_motor'       => $motor->id_motor,
-                'id_petugas'     => auth()->id(), // ID Petugas yang login
+                'id_petugas'     => auth()->id(), 
                 'id_parkir_slot' => $slot->id_parkir_slot,
-                'kode_tiket'     => $kodeTiket, // Pastikan sudah tambah kolom ini di migrasi
+                'kode_tiket'     => $kodeTiket,
                 'jam_masuk'      => Carbon::now(),
                 'status'         => 'Masuk',
                 'total_biaya'    => 0
             ]);
 
-            // 6. Update Slot jadi Terisi
+            // 7. Update Status Slot
             $slot->update(['status' => 'Terisi']);
 
             DB::commit();
 
             return response()->json([
                 'success' => true,
-                'message' => 'Check-in Berhasil. Silakan cetak struk.',
+                'message' => 'Check-in Berhasil',
                 'data' => [
-                    'kode_tiket' => $kodeTiket,
-                    'lokasi_parkir' => $slot->lokasi . ' (' . $slot->kode_slot . ')',
-                    'plat_nomor' => $motor->plat_nomor,
-                    'waktu_masuk' => $transaksi->jam_masuk->format('d-m-Y H:i')
+                    'tiket' => $kodeTiket,
+                    'nama' => $pengguna->nama,
+                    'slot' => $slot->kode_slot,
+                    'jam' => $transaksi->jam_masuk->format('H:i')
                 ]
             ], 201);
 
@@ -99,6 +109,8 @@ class TransaksiController extends Controller
             return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
         }
     }
+    
+    // ... method lainnya (cekTiket, checkout) biarkan tetap sama ...
 
     // [FLOW 2] Scan Tiket: Cek Biaya sebelum checkout
     public function cekTiket($kode_tiket)
