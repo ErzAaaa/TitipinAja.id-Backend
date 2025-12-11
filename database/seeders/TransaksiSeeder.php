@@ -10,16 +10,16 @@ class TransaksiSeeder extends Seeder
 {
     public function run(): void
     {
-        // Pastikan ID referensi (id_pengguna, id_motor, dll) benar-benar ada di tabel masing-masing
-        // atau Seeder akan error "Foreign Key Constraint Fails"
-        
         DB::table('transaksi')->insert([
             [
-                'id_pengguna'    => 1, // WAJIB ADA: Pastikan tabel 'pengguna' punya id 1
-                'id_motor'       => 1, // Pastikan tabel 'motor' punya id 1
-                'id_petugas'     => 1, // Pastikan tabel 'petugas' punya id 1
-                'id_parkir_slot' => 1, // Pastikan tabel 'parkir_slots' punya id 1
-                // 'id_tarif'    => 1, // HAPUS INI (Karena tidak ada di migration)
+                'id_pengguna'    => 1, 
+                'id_motor'       => 1, 
+                'id_petugas'     => 1, 
+                'id_parkir_slot' => 1, 
+                
+                // TAMBAHKAN DUA BARIS INI:
+                'kode_tiket'     => 'TICKET-001', // Beri nilai unik (sesuai constraint di DB)
+                'metode_pembayaran' => 'Cash',   // Isi sesuai kebutuhan data dummy
                 
                 'jam_masuk'      => Carbon::now()->subHours(5),
                 'jam_keluar'     => Carbon::now(),
@@ -34,8 +34,12 @@ class TransaksiSeeder extends Seeder
                 'id_petugas'     => 1,
                 'id_parkir_slot' => 2,
                 
+                // TAMBAHKAN DUA BARIS INI:
+                'kode_tiket'     => 'TICKET-002', // Beri nilai unik
+                'metode_pembayaran' => null,   // Bisa null karena belum selesai/belum bayar
+                
                 'jam_masuk'      => Carbon::now()->subHours(2),
-                'jam_keluar'     => null, // Masih parkir
+                'jam_keluar'     => null, 
                 'total_biaya'    => 0,
                 'status'         => 'Masuk',
                 'created_at'     => Carbon::now(),
