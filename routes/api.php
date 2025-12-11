@@ -1,65 +1,38 @@
 <?php
 
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
-
-// --- IMPORT SEMUA CONTROLLER ANDA DI SINI ---
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\TransaksiController;
+use App\Http\Controllers\ParkirSlotController;
+use App\Http\Controllers\MotorController;
 use App\Http\Controllers\PenggunaController;
-use App\Http\Controllers\PetugasController;
-use App\Http\Controllers\RiwayatController;
-use App\Http\Controllers\MotorController;     // <--- WAJIB: Untuk data motor
-use App\Http\Controllers\TransaksiController; // <--- WAJIB: Untuk transaksi parkir
-use App\Http\Controllers\TarifController;     // <--- WAJIB: Untuk setting harga
 
 /*
 |--------------------------------------------------------------------------
-| API Routes
+| API Routes (ADMIN PANEL ONLY)
 |--------------------------------------------------------------------------
 */
 
-// ==========================================
-// 1. RUTE PUBLIK (Bisa diakses tanpa login)
-// ==========================================
-Route::post('/register', [AuthController::class, 'register']);
+// 1. Rute Login (Khusus Petugas)
 Route::post('/login', [AuthController::class, 'login']);
 
-
-// ==========================================
-// 2. RUTE PRIVATE (Harus Login & Punya Token)
-// ==========================================
+// 2. Rute Protected (Perlu Token Petugas)
 Route::middleware('auth:sanctum')->group(function () {
 
-    // --- AUTH & PROFILE ---
-    Route::post('/logout', [AuthController::class, 'logout']); 
-    // Route profile ini penting agar Flutter tahu siapa yang sedang login
-    Route::get('/profile', [PenggunaController::class, 'profile']); 
+    // Auth Status
+    Route::post('/logout', [AuthController::class, 'logout']);
+    Route::get('/me', [AuthController::class, 'me']); // Cek siapa yg login
 
+    // === INTI APLIKASI (Checkin/Checkout) ===
+    Route::get('/dashboard', [TransaksiController::class, 'index']); // List motor aktif
+    Route::post('/parkir/checkin', [TransaksiController::class, 'store']); // Input motor masuk
+    Route::get('/parkir/cektiket/{kode}', [TransaksiController::class, 'cekTiket']); // Scan QR
+    Route::post('/parkir/checkout', [TransaksiController::class, 'checkout']); // Bayar & Keluar
 
-    // --- DATA PENGGUNA & PETUGAS (User Management) ---
-    // 'apiResource' otomatis membuat route: index, store, show, update, destroy
+    // === MANAJEMEN DATA ===
+    // (Jika Admin ingin edit manual data slot/motor)
+    Route::apiResource('slots', ParkirSlotController::class);
+    Route::apiResource('motors', MotorController::class);
     Route::apiResource('pengguna', PenggunaController::class);
-    Route::apiResource('petugas', PetugasController::class);
 
-
-    // --- DATA INTI APLIKASI (Motor & Tarif) ---
-    Route::apiResource('motor', MotorController::class); 
-    Route::apiResource('tarif', TarifController::class);
-
-
-    // --- TRANSAKSI & RIWAYAT ---
-    Route::apiResource('transaksi', TransaksiController::class);
-    
-    // Rute Custom untuk Riwayat/Aktivitas
-    Route::get('/aktivitas', [RiwayatController::class, 'index']);
-
-    Route::post('/parkir/checkin', [TransaksiController::class, 'checkIn']);
-    
-    // 2. Cek Status Aktif (Untuk Dashboard)
-    Route::get('/parkir/aktivitas', [TransaksiController::class, 'getActiveTransaction']);
-    
-    // 3. Selesai Parkir (Hitung Biaya & Keluar)
-    Route::post('/parkir/checkout', [TransaksiController::class, 'checkOut']);
-
-    
 });
