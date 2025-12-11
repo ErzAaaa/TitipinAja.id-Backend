@@ -13,74 +13,59 @@ use Carbon\Carbon;
 
 class TransaksiController extends Controller
 {
-    // Dashboard: List Transaksi yang sedang parkir (Status: Masuk)
-    public function index()
-    {
-        $transaksi = Transaksi::with(['motor.pengguna', 'parkirSlot'])
-            ->where('status', 'Masuk')
-            ->orderBy('created_at', 'desc')
-            ->get();
-
-        return response()->json(['success' => true, 'data' => $transaksi]);
-    }
-
-    // [FLOW 1] Check-In: Petugas input data, Sistem cari slot & generate tiket
-    // ... import dan kode sebelumnya tetap sama ...
-
+    // [FLOW 1] Check-In: Input Data -> Pilih Slot Terkecil -> Simpan
     public function store(Request $request)
     {
-        // 1. Validasi Input Petugas
+        // 1. Validasi Input
         $request->validate([
-            // Data Pengguna
-            'nama'        => 'required|string|max:100',
-            'alamat'      => 'required|string|max:200',
-            'no_telepon'  => 'required|string|max:20', // Kunci unik identitas user
-            
-            // Data Motor
-            'plat_nomor'  => 'required|string|uppercase',
+            'nama'        => 'required|string',
+            'alamat'      => 'required|string',
+            'no_telepon'  => 'required|string',
+            'plat_nomor'  => 'required|string',
             'merk_motor'  => 'required|string',
         ]);
 
         DB::beginTransaction();
         try {
-            // 2. Cek Slot Parkir
-            $slot = ParkirSlot::where('status', 'Tersedia')->first();
+            // 2. CARI SLOT KOSONG (DENGAN URUTAN TERKECIL)
+            // orderBy('id_parkir_slot', 'asc') -> Memastikan slot A1 diambil sebelum A2
+            $slot = ParkirSlot::where('status', 'Tersedia')
+                        ->orderBy('id_parkir_slot', 'asc') 
+                        ->first();
+
             if (!$slot) {
-                return response()->json(['success' => false, 'message' => 'Parkiran Penuh!'], 400);
+                return response()->json([
+                    'success' => false, 
+                    'message' => 'Mohon maaf, parkiran PENUH.'
+                ], 400);
             }
 
-            // 3. LOGIKA PENGGUNA (Cari atau Buat Baru)
-            // Kita gunakan nomor telepon sebagai patokan unik
+            // 3. Simpan/Cari Data Pengguna (Berdasarkan No Telp)
             $pengguna = Pengguna::firstOrCreate(
-                ['no_telepon' => $request->no_telepon], // Cari berdasarkan HP
+                ['no_telepon' => $request->no_telepon],
                 [
-                    'nama' => $request->nama,           // Jika baru, isi nama
-                    'alamat' => $request->alamat        // Jika baru, isi alamat
+                    'nama'   => $request->nama,
+                    'alamat' => $request->alamat
                 ]
             );
 
-            // Jika pengguna lama tapi namanya beda/update (Opsional: update data lama)
-            // $pengguna->update(['nama' => $request->nama, 'alamat' => $request->alamat]);
-
-            // 4. LOGIKA MOTOR (Cari atau Buat Baru)
-            $motor = Motor::firstOrCreate(
-                ['plat_nomor' => $request->plat_nomor],
-                [
-                    'id_pengguna' => $pengguna->id_pengguna,
-                    'merk'        => $request->merk_motor,
-                    'warna'       => $request->warna ?? '-',
-                    'tahun'       => date('Y')
-                ]
-            );
+            // 4. Simpan Data Motor
+            $motor = Motor::create([
+                'id_pengguna' => $pengguna->id_pengguna,
+                'plat_nomor'  => strtoupper($request->plat_nomor),
+                'merk'        => $request->merk_motor,
+                'warna'       => $request->warna ?? '-',
+                'tahun'       => date('Y')
+            ]);
 
             // 5. Generate Kode Tiket
             $kodeTiket = 'TRX-' . strtoupper(Str::random(6));
 
-            // 6. Simpan Transaksi
+            // 6. Buat Transaksi
             $transaksi = Transaksi::create([
                 'id_pengguna'    => $pengguna->id_pengguna,
                 'id_motor'       => $motor->id_motor,
-                'id_petugas'     => auth()->id(), 
+                'id_petugas'     => auth()->id(), // ID Petugas dari Token
                 'id_parkir_slot' => $slot->id_parkir_slot,
                 'kode_tiket'     => $kodeTiket,
                 'jam_masuk'      => Carbon::now(),
@@ -88,7 +73,7 @@ class TransaksiController extends Controller
                 'total_biaya'    => 0
             ]);
 
-            // 7. Update Status Slot
+            // 7. Update Status Slot jadi Terisi
             $slot->update(['status' => 'Terisi']);
 
             DB::commit();
@@ -99,7 +84,8 @@ class TransaksiController extends Controller
                 'data' => [
                     'tiket' => $kodeTiket,
                     'nama' => $pengguna->nama,
-                    'slot' => $slot->kode_slot,
+                    // Frontend akan menerima slot ini untuk ditampilkan di struk
+                    'slot' => $slot->nomor_slot ?? $slot->lokasi ?? 'Slot ' . $slot->id_parkir_slot, 
                     'jam' => $transaksi->jam_masuk->format('H:i')
                 ]
             ], 201);
@@ -109,19 +95,20 @@ class TransaksiController extends Controller
             return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
         }
     }
-    
-    // ... method lainnya (cekTiket, checkout) biarkan tetap sama ...
 
-    // [FLOW 2] Scan Tiket: Cek Biaya sebelum checkout
+    // [FLOW 2] Cek Biaya (Scan Tiket)
     public function cekTiket($kode_tiket)
     {
         $transaksi = Transaksi::with(['motor', 'parkirSlot'])
             ->where('kode_tiket', $kode_tiket)
-            ->where('status', 'Masuk')
             ->first();
 
         if (!$transaksi) {
-            return response()->json(['success' => false, 'message' => 'Tiket tidak ditemukan atau sudah keluar.'], 404);
+            return response()->json(['success' => false, 'message' => 'Tiket tidak ditemukan.'], 404);
+        }
+        
+        if ($transaksi->status === 'Selesai') {
+             return response()->json(['success' => false, 'message' => 'Tiket ini sudah dibayar sebelumnya.'], 400);
         }
 
         // Hitung Biaya
@@ -131,7 +118,7 @@ class TransaksiController extends Controller
         if ($jamMasuk->diffInMinutes($jamKeluar) % 60 > 0) $durasiJam++; // Pembulatan ke atas
         if ($durasiJam < 1) $durasiJam = 1;
 
-        $tarifPerJam = 2000; // Bisa ambil dari DB Tarif
+        $tarifPerJam = 2000;
         $totalTagihan = $durasiJam * $tarifPerJam;
 
         return response()->json([
@@ -141,32 +128,32 @@ class TransaksiController extends Controller
                 'plat_nomor' => $transaksi->motor->plat_nomor,
                 'durasi_jam' => $durasiJam,
                 'total_tagihan' => $totalTagihan,
-                'metode_bayar_opsi' => ['Cash', 'QRIS']
+                'slot' => $transaksi->parkirSlot->nomor_slot ?? '-'
             ]
         ]);
     }
 
-    // [FLOW 3] Checkout: Konfirmasi Pembayaran & Buka Slot
+    // [FLOW 3] Checkout & Bayar
     public function checkout(Request $request)
     {
         $request->validate([
-            'kode_tiket' => 'required|exists:transaksi,kode_tiket',
-            'metode_pembayaran' => 'required|in:Cash,QRIS'
+            'kode_tiket' => 'required',
+            'metode_pembayaran' => 'required'
         ]);
 
         DB::beginTransaction();
         try {
             $transaksi = Transaksi::where('kode_tiket', $request->kode_tiket)->first();
 
-            if ($transaksi->status == 'Selesai') {
-                return response()->json(['success' => false, 'message' => 'Transaksi ini sudah selesai.'], 400);
+            if (!$transaksi || $transaksi->status == 'Selesai') {
+                return response()->json(['success' => false, 'message' => 'Transaksi tidak valid.'], 400);
             }
 
-            // Hitung ulang final (untuk keamanan)
+            // Hitung Final
             $jamMasuk = Carbon::parse($transaksi->jam_masuk);
             $jamKeluar = Carbon::now();
             $durasiJam = $jamMasuk->diffInHours($jamKeluar);
-            if ($jamMasuk->diffInMinutes($jamKeluar) % 60 > 0) $durasiJam++; 
+            if ($jamMasuk->diffInMinutes($jamKeluar) % 60 > 0) $durasiJam++;
             if ($durasiJam < 1) $durasiJam = 1;
             
             $totalBiaya = $durasiJam * 2000;
@@ -176,10 +163,10 @@ class TransaksiController extends Controller
                 'jam_keluar' => $jamKeluar,
                 'total_biaya' => $totalBiaya,
                 'status' => 'Selesai',
-                'metode_pembayaran' => $request->metode_pembayaran // Pastikan kolom ini ada
+                'metode_pembayaran' => $request->metode_pembayaran
             ]);
 
-            // Kosongkan Slot
+            // KOSONGKAN SLOT (PENTING)
             if ($transaksi->id_parkir_slot) {
                 ParkirSlot::where('id_parkir_slot', $transaksi->id_parkir_slot)
                     ->update(['status' => 'Tersedia']);
@@ -189,13 +176,21 @@ class TransaksiController extends Controller
 
             return response()->json([
                 'success' => true,
-                'message' => 'Checkout Berhasil. Slot telah dikosongkan.',
-                'data' => $transaksi
+                'message' => 'Pembayaran Berhasil. Slot telah dikosongkan.',
             ]);
 
         } catch (\Exception $e) {
             DB::rollBack();
             return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
         }
+    }
+    
+    // Dashboard: List Transaksi Aktif
+    public function index()
+    {
+        $data = Transaksi::with(['motor', 'parkirSlot'])
+                ->orderBy('created_at', 'desc')
+                ->get();
+        return response()->json(['success' => true, 'data' => $data]);
     }
 }
