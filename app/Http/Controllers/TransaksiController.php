@@ -56,7 +56,7 @@ class TransaksiController extends Controller
                 
                 // PERBAIKAN: Ambil ID dari $slot->id_slot
                 // Pastikan kolom di tabel Transaksi bernama 'id_parkir_slot' (sesuai migration transaksi)
-                'id_parkir_slot' => $slot->id_slot,
+                'id_slot' => $slot->id_slot,
                 
                 'kode_tiket'     => $kodeTiket,
                 'jam_masuk'      => Carbon::now(),
