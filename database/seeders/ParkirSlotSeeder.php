@@ -10,14 +10,19 @@ class ParkirSlotSeeder extends Seeder
 {
     public function run(): void
     {
+        // Kosongkan tabel dulu agar tidak duplikat saat seeding ulang
+        DB::statement('SET FOREIGN_KEY_CHECKS=0;');
+        DB::table('parkir_slots')->truncate();
+        DB::statement('SET FOREIGN_KEY_CHECKS=1;');
+
         $slots = [];
         
         // Loop Lantai 1 (A1 - A10)
         for ($i = 1; $i <= 10; $i++) {
             $slots[] = [
-                'nomor_slot' => 'A' . $i,       // Perbaikan: gunakan 'nomor_slot'
+                'nomor_slot' => 'A' . $i,
                 'lokasi'     => 'Lantai 1',
-                'status'     => 'Tersedia',     // Perbaikan: gunakan 'Tersedia'
+                'status'     => 'Tersedia',
                 'created_at' => Carbon::now(),
                 'updated_at' => Carbon::now(),
             ];
@@ -34,18 +39,6 @@ class ParkirSlotSeeder extends Seeder
             ];
         }
         
-        // Loop Lantai 3 (C1 - C10)
-        for ($i = 1; $i <= 10; $i++) {
-            $slots[] = [
-                'nomor_slot' => 'C' . $i,
-                'lokasi'     => 'Lantai 3',
-                'status'     => 'Tersedia',
-                'created_at' => Carbon::now(),
-                'updated_at' => Carbon::now(),
-            ];
-        }
-        
-        // PENTING: Masukkan ke tabel 'parkir_slots' (ada 's' di belakang)
         DB::table('parkir_slots')->insert($slots);
     }
 }

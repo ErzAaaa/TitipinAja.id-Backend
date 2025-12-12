@@ -10,29 +10,30 @@ class ParkirSlot extends Model
     use HasFactory;
 
     protected $table = 'parkir_slots';
-    protected $primaryKey = 'id_slot';
+    
+    // PRIMARY KEY
+    protected $primaryKey = 'id_slot'; 
 
     protected $fillable = [
-        'kode_slot',
+        'nomor_slot', // PERBAIKAN: Gunakan nomor_slot (bukan kode_slot)
         'lokasi',
         'status',
     ];
 
-    // Relasi One-to-Many dengan Transaksi
     public function transaksis()
     {
-        return $this->hasMany(Transaksi::class, 'id_slot', 'id_slot');
+        // Sesuaikan relasi: (Model, Foreign Key di Transaksi, Local Key di sini)
+        // Asumsi di tabel transaksi nama kolomnya 'id_parkir_slot'
+        return $this->hasMany(Transaksi::class, 'id_parkir_slot', 'id_slot');
     }
 
-    // Scope untuk slot kosong
     public function scopeKosong($query)
     {
-        return $query->where('status', 'kosong');
+        return $query->where('status', 'Tersedia');
     }
 
-    // Scope untuk slot terisi
     public function scopeTerisi($query)
     {
-        return $query->where('status', 'terisi');
+        return $query->where('status', 'Terisi');
     }
 }

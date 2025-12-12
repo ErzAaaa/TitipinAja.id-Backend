@@ -15,36 +15,40 @@ class TransaksiSeeder extends Seeder
                 'id_pengguna'    => 1, 
                 'id_motor'       => 1, 
                 'id_petugas'     => 1, 
-                'id_slot' => 1, 
                 
-                // TAMBAHKAN DUA BARIS INI:
-                'kode_tiket'     => 'TICKET-001', // Beri nilai unik (sesuai constraint di DB)
-                'metode_pembayaran' => 'Cash',   // Isi sesuai kebutuhan data dummy
+                // PERBAIKAN: Gunakan id_parkir_slot (sesuai controller & migration)
+                'id_slot'        => 1, 
                 
-                'jam_masuk'      => Carbon::now()->subHours(5),
-                'jam_keluar'     => Carbon::now(),
-                'total_biaya'    => 5000,
-                'status'         => 'Selesai',
-                'created_at'     => Carbon::now(),
-                'updated_at'     => Carbon::now(),
+                'kode_tiket'        => 'TRX-DUMMY1',
+                'metode_pembayaran' => 'Cash',
+                'jam_masuk'         => Carbon::now()->subHours(5),
+                'jam_keluar'        => Carbon::now(),
+                'total_biaya'       => 10000, // 5 jam * 2000
+                'status'            => 'Selesai',
+                'created_at'        => Carbon::now(),
+                'updated_at'        => Carbon::now(),
             ],
             [
                 'id_pengguna'    => 2,
                 'id_motor'       => 2, 
                 'id_petugas'     => 1,
-                'id_slot' => 2,
                 
-                // TAMBAHKAN DUA BARIS INI:
-                'kode_tiket'     => 'TICKET-002', // Beri nilai unik
-                'metode_pembayaran' => null,   // Bisa null karena belum selesai/belum bayar
+                // PERBAIKAN: Gunakan id_parkir_slot
+                'id_slot'        => 2,
                 
-                'jam_masuk'      => Carbon::now()->subHours(2),
-                'jam_keluar'     => null, 
-                'total_biaya'    => 0,
-                'status'         => 'Masuk',
-                'created_at'     => Carbon::now(),
-                'updated_at'     => Carbon::now(),
+                'kode_tiket'        => 'TRX-DUMMY2',
+                'metode_pembayaran' => null, // Belum bayar
+                'jam_masuk'         => Carbon::now()->subHours(2),
+                'jam_keluar'        => null, 
+                'total_biaya'       => 0,
+                'status'            => 'Masuk',
+                'created_at'        => Carbon::now(),
+                'updated_at'        => Carbon::now(),
             ],
         ]);
+
+        // Opsional: Update status slot agar sesuai dengan transaksi dummy
+        // Slot 2 sedang dipakai ('Masuk'), jadi statusnya harus 'Terisi'
+        DB::table('parkir_slots')->where('id_slot', 2)->update(['status' => 'Terisi']);
     }
 }
