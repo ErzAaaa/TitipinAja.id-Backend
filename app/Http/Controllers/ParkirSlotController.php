@@ -70,8 +70,8 @@ class ParkirSlotController extends Controller
         }
 
         $validator = Validator::make($request->all(), [
-            // UBAH id_slot menjadi id
-            'kode_slot' => 'sometimes|string|max:20|unique:parkir_slot,kode_slot,' . $id . ',id', 
+            // PERBAIKAN: Ganti 'id_slot' menjadi 'id'
+            'kode_slot' => 'sometimes|string|max:20|unique:parkir_slot,kode_slot,' . $id . ',id',
             'lokasi' => 'sometimes|string|max:50',
             'status' => 'sometimes|string|max:20',
         ]);
