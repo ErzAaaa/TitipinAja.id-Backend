@@ -25,17 +25,20 @@ class AdminParkirController extends Controller
             return response()->json(['message' => 'Parkir sudah berjalan!'], 400);
         }
 
-        // 3. SET WAKTU MASUK KE SEKARANG (Saat Admin tekan tombol)
+        // 3. SET WAKTU MASUK KE SEKARANG
         $waktuSekarang = Carbon::now();
 
         $transaksi->update([
-            'waktu_masuk' => $waktuSekarang, // INI KUNCINYA
-            'status'      => 'Masuk',        // Ubah status jadi aktif
+            // PERBAIKAN: Gunakan 'jam_masuk' (bukan waktu_masuk)
+            'jam_masuk' => $waktuSekarang, 
+            'status'    => 'Masuk',      
         ]);
 
         // 4. Update status Slot jadi 'Terisi'
-        if ($transaksi->id_parkir_slot) {
-            ParkirSlot::where('id_parkir_slot', $transaksi->id_parkir_slot)
+        // PERBAIKAN: Gunakan 'id_slot'
+        if ($transaksi->id_slot) {
+            // PERBAIKAN: Where ke kolom 'id_slot'
+            ParkirSlot::where('id_slot', $transaksi->id_slot)
                 ->update(['status' => 'Terisi']);
         }
 
@@ -45,26 +48,26 @@ class AdminParkirController extends Controller
         ]);
     }
     
-    // Fungsi Hitung Biaya Realtime (Opsional, untuk preview admin)
+    // Fungsi Hitung Biaya Realtime
     public function cekBiaya($id_transaksi)
     {
         $transaksi = Transaksi::find($id_transaksi);
         
-        if ($transaksi->status != 'Masuk') {
+        if (!$transaksi || $transaksi->status != 'Masuk') {
             return response()->json(['biaya' => 0, 'durasi' => 'Belum mulai']);
         }
 
-        $masuk = Carbon::parse($transaksi->waktu_masuk);
+        // PERBAIKAN: Gunakan 'jam_masuk'
+        $masuk = Carbon::parse($transaksi->jam_masuk);
         $sekarang = Carbon::now();
         
         // Hitung selisih jam
         $durasiJam = $masuk->diffInHours($sekarang);
-        // Jika ada sisa menit, bulatkan ke atas (hitung 1 jam)
         if ($masuk->diffInMinutes($sekarang) % 60 > 0) {
             $durasiJam++;
         }
         
-        // Contoh tarif 2000 per jam
+        // Tarif 2000 per jam
         $biaya = ($durasiJam == 0 ? 1 : $durasiJam) * 2000;
 
         return response()->json([
