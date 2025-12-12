@@ -12,16 +12,15 @@ class Transaksi extends Model
     protected $table = 'transaksi';
     protected $primaryKey = 'id_transaksi';
 
+    // app/Models/Transaksi.php
     protected $fillable = [
-        'id_pengguna', 
-        'id_motor', 
-        'id_petugas', 
-        'id_parkir_slot', // SUDAH BENAR (Sesuai Migration)
-        'jam_masuk', 
-        'jam_keluar', 
-        'total_biaya', 
-        'status'
-        // 'id_tarif' DIHAPUS karena kita hitung manual di controller
+        'user_id',
+        'motor_id',
+        'kode_transaksi',
+        // Tambahkan kolom baru Anda di sini, contoh:
+        'total_biaya',
+        'status_bayar',
+        'detail_tambahan',
     ];
 
     protected $casts = [
@@ -55,7 +54,7 @@ class Transaksi extends Model
     {
         // Parameter 2: Foreign Key di tabel transaksi (id_parkir_slot)
         // Parameter 3: Owner Key di tabel parkir_slots (id_parkir_slot)
-        return $this->belongsTo(ParkirSlot::class, 'id_parkir_slot', 'id_parkir_slot');
+        return $this->belongsTo(ParkirSlot::class, 'id_slot', 'id_slot');
     }
 
     // ==========================
