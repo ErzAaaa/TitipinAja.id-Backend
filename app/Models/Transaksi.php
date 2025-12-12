@@ -12,19 +12,23 @@ class Transaksi extends Model
     protected $table = 'transaksi';
     protected $primaryKey = 'id_transaksi';
 
-    // app/Models/Transaksi.php
+    // PERBAIKAN 1: Sesuaikan $fillable dengan nama kolom di database (id_pengguna)
     protected $fillable = [
-        'user_id',
-        'motor_id',
-        'kode_transaksi',
-        // Tambahkan kolom baru Anda di sini, contoh:
+        'id_pengguna',    // <-- Ubah dari 'user_id' menjadi 'id_pengguna'
+        'id_motor',       // Pastikan ini id_motor (sesuai migrasi) bukan motor_id
+        'id_petugas',     // Tambahkan ini agar id_petugas bisa disimpan
+        'id_parkir_slot', // <-- Sesuaikan dengan controller Anda ($slot->id_slot)
+        'kode_tiket',
+        'jam_masuk',
+        'jam_keluar',
         'total_biaya',
-        'status_bayar',
-        'detail_tambahan',
+        'status',
+        'metode_pembayaran',
+        'kode_transaksi' // Jika memang ada kolom ini
     ];
 
     protected $casts = [
-        'jam_masuk' => 'datetime', // Biarkan datetime agar mudah dihitung Carbon
+        'jam_masuk' => 'datetime',
         'jam_keluar' => 'datetime',
     ];
 
@@ -42,34 +46,18 @@ class Transaksi extends Model
         return $this->belongsTo(Petugas::class, 'id_petugas', 'id_petugas');
     }
 
-    // Tambahan: Relasi ke User (Pengguna)
+    // PERBAIKAN 2: Arahkan ke model Pengguna::class, bukan User::class
     public function pengguna()
     {
-        // Sesuaikan 'User::class' dengan nama model user Anda (misal: Pengguna::class)
-        return $this->belongsTo(User::class, 'id_pengguna', 'id'); 
+        return $this->belongsTo(Pengguna::class, 'id_pengguna', 'id_pengguna'); 
     }
 
-    // PERBAIKAN PENTING: Nama kolom foreign key & owner key
     public function parkirSlot()
     {
-        // Parameter 2: Foreign Key di tabel transaksi (id_parkir_slot)
-        // Parameter 3: Owner Key di tabel parkir_slots (id_parkir_slot)
-        return $this->belongsTo(ParkirSlot::class, 'id_slot', 'id_slot');
+        // Sesuaikan parameter foreign key dengan kolom di tabel transaksi
+        // Berdasarkan controller Anda: 'id_parkir_slot'
+        return $this->belongsTo(ParkirSlot::class, 'id_parkir_slot', 'id_slot');
     }
 
-    // ==========================
-    // SCOPES (Untuk Filter Mudah)
-    // ==========================
-
-    // Scope untuk transaksi aktif (status = 'Masuk')
-    public function scopeAktif($query)
-    {
-        return $query->where('status', 'Masuk');
-    }
-
-    // Scope untuk transaksi selesai (status = 'Selesai')
-    public function scopeSelesai($query)
-    {
-        return $query->where('status', 'Selesai');
-    }
+    // ... scopes ...
 }
