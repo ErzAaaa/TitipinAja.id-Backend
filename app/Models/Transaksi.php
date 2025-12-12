@@ -12,19 +12,18 @@ class Transaksi extends Model
     protected $table = 'transaksi';
     protected $primaryKey = 'id_transaksi';
 
-    // PERBAIKAN 1: Sesuaikan $fillable dengan nama kolom di database (id_pengguna)
     protected $fillable = [
-        'id_pengguna',    // <-- Ubah dari 'user_id' menjadi 'id_pengguna'
-        'id_motor',       // Pastikan ini id_motor (sesuai migrasi) bukan motor_id
-        'id_petugas',     // Tambahkan ini agar id_petugas bisa disimpan
-        'id_parkir_slot', // <-- Sesuaikan dengan controller Anda ($slot->id_slot)
+        'id_pengguna',    // SUDAH BENAR
+        'id_motor',       // SUDAH BENAR
+        'id_petugas',
+        'id_slot',        // <--- PERBAIKAN: Gunakan 'id_slot' sesuai database (bukan id_parkir_slot)
         'kode_tiket',
         'jam_masuk',
         'jam_keluar',
         'total_biaya',
         'status',
         'metode_pembayaran',
-        'kode_transaksi' // Jika memang ada kolom ini
+        'kode_transaksi'
     ];
 
     protected $casts = [
@@ -46,18 +45,16 @@ class Transaksi extends Model
         return $this->belongsTo(Petugas::class, 'id_petugas', 'id_petugas');
     }
 
-    // PERBAIKAN 2: Arahkan ke model Pengguna::class, bukan User::class
     public function pengguna()
     {
-        return $this->belongsTo(Pengguna::class, 'id_pengguna', 'id_pengguna'); 
+        return $this->belongsTo(Pengguna::class, 'id_pengguna', 'id_pengguna');
     }
 
     public function parkirSlot()
     {
-        // Sesuaikan parameter foreign key dengan kolom di tabel transaksi
-        // Berdasarkan controller Anda: 'id_parkir_slot'
-        return $this->belongsTo(ParkirSlot::class, 'id_parkir_slot', 'id_slot');
+        // PERBAIKAN: 
+        // 1. Nama kolom di tabel transaksi adalah 'id_slot'
+        // 2. Nama kolom di tabel parkir_slots adalah 'id_slot'
+        return $this->belongsTo(ParkirSlot::class, 'id_slot', 'id_slot');
     }
-
-    // ... scopes ...
 }
